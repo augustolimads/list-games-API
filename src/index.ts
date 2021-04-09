@@ -2,7 +2,6 @@ const express = require("express")
 const cors = require("cors")
 const jwt = require("jsonwebtoken")
 const dotenv = require("dotenv")
-const authMiddleware = require("./middlewares/auth");
 
 dotenv.config();
 
@@ -84,12 +83,44 @@ const DB = {
 }
 
 app.get("/games", auth, (req, res) => {
+
+  const HATEOAS = [
+    {
+      href:"https://localhost:8080/game/0",
+      method:"DELETE",
+      rel: "delete_game"
+    },
+    {
+      href:"https://localhost:8080/game/0",
+      method:"GET",
+      rel: "get_game"
+    },
+    {
+      href:"https://localhost:8080/auth",
+      method:"POST",
+      rel: "login"
+    },
+  ]
+
   res.status(200);
-  res.json(DB.games);
+  res.json({games:DB.games, _links: HATEOAS});
 });
 
 app.get("/games/:id", auth, (req, res) => {
   let id = Number(req.params.id);
+
+  const HATEOAS = [
+    {
+      href:`https://localhost:8080/game/${id}`,
+      method:"DELETE",
+      rel: "delete_game"
+    },
+    {
+      href:`https://localhost:8080/game/${id}`,
+      method:"GET",
+      rel: "get_game"
+    },
+  ]
 
 
   if (isNaN(id)) {
@@ -100,7 +131,7 @@ app.get("/games/:id", auth, (req, res) => {
   let game = DB.games.find((game) => game.id === id);
   if (game) {
     res.status(200);
-    res.json({ game });
+    res.json({ game, _links: HATEOAS });
   } else {
     res.status(404);
     res.json({ message: "not found this id" });
